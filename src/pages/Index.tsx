@@ -24,18 +24,18 @@ const Index = () => {
         <div className="relative container mx-auto px-4 py-24">
           <div className="max-w-3xl">
             <h1 className="text-5xl font-bold text-white mb-6">
-              Connect. Code. Collaborate.
+              Discover. Connect. Grow.
             </h1>
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              Join the ultimate campus coding community where students solve problems together, 
-              showcase projects, and build the future of technology.
+              Join 404Found, the professional platform where you can explore posts and engage with the community. 
+              Connect with like-minded professionals and showcase your expertise.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="bg-gradient-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:shadow-glow transition-all">
-                Share Your First Problem
+                Explore Posts
               </button>
               <button className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition-all">
-                Explore Projects
+                Join Community
               </button>
             </div>
           </div>

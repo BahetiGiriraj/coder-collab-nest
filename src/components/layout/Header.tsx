@@ -36,8 +36,8 @@ const Header = () => {
               <Code2 className="h-6 w-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="font-bold text-lg text-primary">Campus Coders</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Collaborative</p>
+              <h1 className="font-bold text-lg text-primary">404Found</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">Professional Platform</p>
             </div>
           </div>
 
@@ -79,9 +79,19 @@ const Header = () => {
               <MessageSquare className="h-4 w-4" />
             </Button>
 
-            <Avatar className="h-8 w-8">
+            {/* Auth Buttons */}
+            <div className="hidden sm:flex items-center space-x-2">
+              <Button variant="ghost" asChild>
+                <NavLink to="/login">Log In</NavLink>
+              </Button>
+              <Button variant="premium" asChild>
+                <NavLink to="/signin">Sign Up</NavLink>
+              </Button>
+            </div>
+
+            <Avatar className="h-8 w-8 sm:hidden">
               <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarFallback>?</AvatarFallback>
             </Avatar>
 
             {/* Mobile Menu Button */}

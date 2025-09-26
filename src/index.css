@@ -8,57 +8,59 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Campus Coders Design System */
-    --background: 220 15% 97%;
-    --foreground: 224 71% 4%;
+    /* 404Found Professional Design System */
+    --background: 217 33% 97%;
+    --foreground: 217 33% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 224 71% 4%;
+    --card-foreground: 217 33% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71% 4%;
+    --popover-foreground: 217 33% 8%;
 
-    /* Deep navy primary with electric blue accent system */
-    --primary: 224 71% 8%;
+    /* Modern purple-blue primary with vibrant accent system */
+    --primary: 250 84% 28%;
     --primary-foreground: 210 40% 98%;
-    --primary-glow: 210 100% 70%;
+    --primary-glow: 250 84% 54%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 224 71% 8%;
+    --secondary: 217 32% 96%;
+    --secondary-foreground: 217 33% 12%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
+    --muted: 217 32% 96%;
+    --muted-foreground: 217 13% 46%;
 
-    --accent: 210 100% 50%;
+    --accent: 292 84% 61%;
     --accent-foreground: 0 0% 100%;
-    --accent-glow: 210 100% 70%;
+    --accent-glow: 292 84% 71%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 210 100% 50%;
+    --border: 217 32% 91%;
+    --input: 217 32% 91%;
+    --ring: 292 84% 61%;
 
     --radius: 0.75rem;
 
-    /* Campus-specific colors */
-    --campus-blue: 210 100% 50%;
-    --campus-navy: 224 71% 8%;
-    --campus-purple: 250 84% 54%;
-    --campus-green: 142 76% 36%;
-    --campus-orange: 25 95% 53%;
+    /* Professional brand colors */
+    --brand-purple: 250 84% 54%;
+    --brand-violet: 292 84% 61%;
+    --brand-blue: 217 91% 60%;
+    --brand-emerald: 158 64% 52%;
+    --brand-amber: 43 96% 56%;
 
-    /* Gradients */
+    /* Premium gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
-    --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(220 15% 94%));
+    --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(217 32% 94%));
+    --gradient-premium: linear-gradient(135deg, hsl(292 84% 61%), hsl(250 84% 54%));
 
-    /* Shadows */
-    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.1);
-    --shadow-glow: 0 0 40px hsl(var(--accent) / 0.2);
+    /* Professional shadows */
+    --shadow-elegant: 0 10px 30px -10px hsl(var(--primary) / 0.15);
+    --shadow-glow: 0 0 40px hsl(var(--accent) / 0.25);
+    --shadow-premium: 0 20px 60px -10px hsl(292 84% 61% / 0.2);
 
-    /* Animations */
+    /* Smooth animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
@@ -72,47 +74,49 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 217 33% 4%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 217 33% 6%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 217 33% 6%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --primary-glow: 210 100% 70%;
+    --primary: 250 84% 64%;
+    --primary-foreground: 217 33% 8%;
+    --primary-glow: 250 84% 74%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 32% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 32% 17%;
+    --muted-foreground: 217 20% 65%;
 
-    --accent: 210 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 210 100% 70%;
+    --accent: 292 84% 71%;
+    --accent-foreground: 217 33% 8%;
+    --accent-glow: 292 84% 81%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217 32% 17%;
+    --input: 217 32% 17%;
+    --ring: 292 84% 71%;
 
-    /* Campus colors for dark mode */
-    --campus-blue: 210 100% 60%;
-    --campus-navy: 224 71% 15%;
-    --campus-purple: 250 84% 64%;
-    --campus-green: 142 76% 46%;
-    --campus-orange: 25 95% 63%;
+    /* Professional brand colors for dark mode */
+    --brand-purple: 250 84% 64%;
+    --brand-violet: 292 84% 71%;
+    --brand-blue: 217 91% 68%;
+    --brand-emerald: 158 64% 60%;
+    --brand-amber: 43 96% 64%;
 
     /* Dark mode gradients */
-    --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(217.2 32.6% 12%));
-    --shadow-elegant: 0 10px 30px -10px hsl(0 0% 0% / 0.3);
-    --shadow-glow: 0 0 40px hsl(var(--accent) / 0.3);
+    --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(217 32% 12%));
+    --gradient-premium: linear-gradient(135deg, hsl(292 84% 71%), hsl(250 84% 64%));
+    --shadow-elegant: 0 10px 30px -10px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 40px hsl(var(--accent) / 0.35);
+    --shadow-premium: 0 20px 60px -10px hsl(292 84% 71% / 0.3);
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
