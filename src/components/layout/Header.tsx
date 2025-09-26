@@ -37,48 +37,29 @@ const Header = () => {
             </div>
             <div>
               <h1 className="font-bold text-lg text-primary">404Found</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Professional Platform</p>
             </div>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Hidden until authenticated */}
           <nav className="hidden lg:flex space-x-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  }`
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.name}</span>
-              </NavLink>
-            ))}
+            {/* Only show home/posts link when not authenticated */}
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                `flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  isActive
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                }`
+              }
+            >
+              <Code2 className="h-4 w-4" />
+              <span>Explore</span>
+            </NavLink>
           </nav>
 
           {/* Search and Actions */}
           <div className="flex items-center space-x-4">
-            <div className="hidden md:flex relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search posts, teams..."
-                className="pl-10 w-64"
-              />
-            </div>
-            
-            <Button variant="ghost" size="icon">
-              <Bell className="h-4 w-4" />
-            </Button>
-            
-            <Button variant="ghost" size="icon">
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-
             {/* Auth Buttons */}
             <div className="hidden sm:flex items-center space-x-2">
               <Button variant="ghost" asChild>
@@ -110,23 +91,28 @@ const Header = () => {
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-2">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.name}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    }`
-                  }
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.name}</span>
-                </NavLink>
-              ))}
+              <NavLink
+                to="/"
+                className={({ isActive }) =>
+                  `flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`
+                }
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Code2 className="h-4 w-4" />
+                <span>Explore</span>
+              </NavLink>
+              <div className="px-4 py-2 space-y-2">
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <NavLink to="/login" onClick={() => setIsMenuOpen(false)}>Log In</NavLink>
+                </Button>
+                <Button variant="premium" className="w-full justify-start" asChild>
+                  <NavLink to="/signin" onClick={() => setIsMenuOpen(false)}>Sign Up</NavLink>
+                </Button>
+              </div>
             </nav>
           </div>
         )}

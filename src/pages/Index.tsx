@@ -27,8 +27,8 @@ const Index = () => {
               Discover. Connect. Grow.
             </h1>
             <p className="text-xl text-white/90 mb-8 leading-relaxed">
-              Join 404Found, the professional platform where you can explore posts and engage with the community. 
-              Connect with like-minded professionals and showcase your expertise.
+              Join 404Found where you can explore posts and engage with the community. 
+              Connect with like-minded individuals and showcase your expertise.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button className="bg-gradient-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:shadow-glow transition-all">
