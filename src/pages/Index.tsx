@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import ChatSidebar from "@/components/layout/ChatSidebar";
 import PostsFeed from "@/components/posts/PostsFeed";
 import heroImage from "@/assets/campus-hero.jpg";
@@ -8,7 +9,7 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-bg">
+    <div className="min-h-screen bg-gradient-bg flex flex-col">
       <Header />
       
       {/* Hero Section */}
@@ -16,7 +17,7 @@ const Index = () => {
         <div className="absolute inset-0">
           <img 
             src={heroImage} 
-            alt="Campus coding community" 
+            alt="Community platform hero" 
             className="w-full h-full object-cover opacity-90"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-primary/60" />
@@ -43,13 +44,16 @@ const Index = () => {
       </section>
 
       {/* Main Content */}
-      <main className={`container mx-auto px-4 py-8 transition-all duration-300 ${
+      <main className={`container mx-auto px-4 py-8 transition-all duration-300 flex-1 ${
         isChatOpen ? "mr-80" : "mr-12"
       }`}>
         <div className="max-w-4xl mx-auto">
           <PostsFeed />
         </div>
       </main>
+
+      {/* Footer */}
+      <Footer />
 
       {/* Chat Sidebar */}
       <ChatSidebar isOpen={isChatOpen} onToggle={() => setIsChatOpen(!isChatOpen)} />
