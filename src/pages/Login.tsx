@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 import { Code2, Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -23,6 +25,8 @@ const Login = () => {
     e.preventDefault();
     // Authentication logic will be added when Supabase is connected
     console.log("Login attempt:", formData);
+    // Set authenticated state
+    login();
     // Redirect to main page
     navigate("/");
   };
