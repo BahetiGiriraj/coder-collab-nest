@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import Footer from "@/components/layout/Footer";
 import { Code2, Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
@@ -22,6 +23,8 @@ const Login = () => {
     e.preventDefault();
     // Authentication logic will be added when Supabase is connected
     console.log("Login attempt:", formData);
+    // Redirect to main page
+    navigate("/");
   };
 
   return (

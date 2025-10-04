@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import ChatSidebar from "@/components/layout/ChatSidebar";
@@ -7,6 +8,12 @@ import heroImage from "@/assets/campus-hero.jpg";
 
 const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const navigate = useNavigate();
+  const postsRef = useRef<HTMLDivElement>(null);
+
+  const scrollToPosts = () => {
+    postsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-bg flex flex-col">
@@ -32,10 +39,16 @@ const Index = () => {
               Connect with like-minded individuals and showcase your expertise.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="bg-gradient-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:shadow-glow transition-all">
+              <button 
+                onClick={scrollToPosts}
+                className="bg-gradient-accent text-accent-foreground px-8 py-4 rounded-lg font-semibold hover:shadow-glow transition-all"
+              >
                 Explore Posts
               </button>
-              <button className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition-all">
+              <button 
+                onClick={() => navigate('/signin')}
+                className="bg-white/10 text-white border border-white/20 px-8 py-4 rounded-lg font-semibold hover:bg-white/20 transition-all"
+              >
                 Join Community
               </button>
             </div>
@@ -44,9 +57,12 @@ const Index = () => {
       </section>
 
       {/* Main Content */}
-      <main className={`container mx-auto px-4 py-8 transition-all duration-300 flex-1 ${
-        isChatOpen ? "mr-80" : "mr-12"
-      }`}>
+      <main 
+        ref={postsRef}
+        className={`container mx-auto px-4 py-8 transition-all duration-300 flex-1 ${
+          isChatOpen ? "mr-80" : "mr-12"
+        }`}
+      >
         <div className="max-w-4xl mx-auto">
           <PostsFeed />
         </div>
