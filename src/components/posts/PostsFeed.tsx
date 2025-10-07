@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Heart, 
   MessageCircle, 
@@ -17,7 +18,9 @@ import {
 } from "lucide-react";
 
 const PostsFeed = () => {
-  const [posts] = useState([
+  const { toast } = useToast();
+  const [newPostContent, setNewPostContent] = useState("");
+  const [posts, setPosts] = useState([
     {
       id: "1",
       author: {
@@ -78,8 +81,41 @@ const [loading, setLoading] = useState(true);
   const [activeCommentPost, setActiveCommentPost] = useState<string | null>(null);
 
   const handleLike = (postId: string) => {
-    // Handle like logic here
-    console.log("Liked post:", postId);
+    setPosts(posts.map(post => 
+      post.id === postId 
+        ? { 
+            ...post, 
+            hasLiked: !post.hasLiked,
+            likes: post.hasLiked ? post.likes - 1 : post.likes + 1
+          }
+        : post
+    ));
+    const post = posts.find(p => p.id === postId);
+    toast({
+      title: post?.hasLiked ? "Unliked" : "Liked!",
+      description: post?.hasLiked ? "Removed from liked posts" : "Added to liked posts"
+    });
+  };
+
+  const handleBookmark = (postId: string) => {
+    setPosts(posts.map(post => 
+      post.id === postId 
+        ? { ...post, hasBookmarked: !post.hasBookmarked }
+        : post
+    ));
+    const post = posts.find(p => p.id === postId);
+    toast({
+      title: post?.hasBookmarked ? "Removed bookmark" : "Bookmarked!",
+      description: post?.hasBookmarked ? "Removed from saved posts" : "Added to saved posts"
+    });
+  };
+
+  const handleShare = (postId: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
+    toast({
+      title: "Link copied!",
+      description: "Post link copied to clipboard"
+    });
   };
 
   const handleComment = (postId: string) => {
@@ -88,11 +124,35 @@ const [loading, setLoading] = useState(true);
 
   const handleSendComment = (postId: string) => {
     if (newComment.trim()) {
-      // Handle comment sending logic
-      console.log("Comment on post:", postId, newComment);
+      setPosts(posts.map(post => 
+        post.id === postId 
+          ? { ...post, comments: post.comments + 1 }
+          : post
+      ));
+      toast({
+        title: "Comment posted!",
+        description: "Your comment has been added"
+      });
       setNewComment("");
       setActiveCommentPost(null);
     }
+  };
+
+  const handleCreatePost = () => {
+    if (newPostContent.trim()) {
+      toast({
+        title: "Post created!",
+        description: "Your post has been published successfully"
+      });
+      setNewPostContent("");
+    }
+  };
+
+  const handleMediaAction = (type: string) => {
+    toast({
+      title: `${type} selected`,
+      description: `${type} upload feature coming soon`
+    });
   };
 
   return (
@@ -107,25 +167,31 @@ const [loading, setLoading] = useState(true);
             </Avatar>
             <div className="flex-1">
               <Textarea
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
                 placeholder="Share a coding problem, ask for help, or showcase your project..."
                 className="min-h-[100px] mb-4"
               />
               <div className="flex justify-between items-center">
                 <div className="flex space-x-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleMediaAction("Code")}>
                     <Code className="h-4 w-4 mr-2" />
                     Code
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleMediaAction("Image")}>
                     <Image className="h-4 w-4 mr-2" />
                     Image
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleMediaAction("Video")}>
                     <Video className="h-4 w-4 mr-2" />
                     Video
                   </Button>
                 </div>
-                <Button className="bg-gradient-accent">
+                <Button 
+                  className="bg-gradient-accent" 
+                  onClick={handleCreatePost}
+                  disabled={!newPostContent.trim()}
+                >
                   Post
                 </Button>
               </div>
@@ -211,7 +277,7 @@ const [loading, setLoading] = useState(true);
                   {post.comments}
                 </Button>
 
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" onClick={() => handleShare(post.id)}>
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -220,6 +286,7 @@ const [loading, setLoading] = useState(true);
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => handleBookmark(post.id)}
                 className={post.hasBookmarked ? "text-campus-blue" : ""}
               >
                 <BookmarkPlus className={`h-4 w-4 ${post.hasBookmarked ? "fill-current" : ""}`} />

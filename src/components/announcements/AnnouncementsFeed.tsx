@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Calendar, 
   Clock, 
@@ -13,6 +15,11 @@ import {
 } from "lucide-react";
 
 const AnnouncementsFeed = () => {
+  const { toast } = useToast();
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [rsvpedEvents, setRsvpedEvents] = useState<string[]>([]);
+  const [reminders, setReminders] = useState<string[]>([]);
+  
   const announcements = [
     {
       id: "1",
@@ -117,6 +124,62 @@ const AnnouncementsFeed = () => {
     }
   };
 
+  const handleSubscribe = () => {
+    setIsSubscribed(!isSubscribed);
+    toast({
+      title: isSubscribed ? "Unsubscribed" : "Subscribed!",
+      description: isSubscribed 
+        ? "You will no longer receive notifications" 
+        : "You'll now receive notifications for new announcements"
+    });
+  };
+
+  const handleRSVP = (announcementId: string) => {
+    if (rsvpedEvents.includes(announcementId)) {
+      setRsvpedEvents(rsvpedEvents.filter(id => id !== announcementId));
+      toast({
+        title: "RSVP Cancelled",
+        description: "Your RSVP has been cancelled"
+      });
+    } else {
+      setRsvpedEvents([...rsvpedEvents, announcementId]);
+      toast({
+        title: "RSVP Confirmed!",
+        description: "We'll see you there!"
+      });
+    }
+  };
+
+  const handleLearnMore = (title: string) => {
+    toast({
+      title: "Opening details...",
+      description: `Loading more information about ${title}`
+    });
+  };
+
+  const handleReminder = (announcementId: string) => {
+    if (reminders.includes(announcementId)) {
+      setReminders(reminders.filter(id => id !== announcementId));
+      toast({
+        title: "Reminder removed",
+        description: "You won't be reminded about this event"
+      });
+    } else {
+      setReminders([...reminders, announcementId]);
+      toast({
+        title: "Reminder set!",
+        description: "We'll remind you about this event"
+      });
+    }
+  };
+
+  const handleFilter = () => {
+    toast({
+      title: "Filters",
+      description: "Filter options coming soon"
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -126,11 +189,15 @@ const AnnouncementsFeed = () => {
           <p className="text-muted-foreground">Stay updated with the latest news and events</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant={isSubscribed ? "default" : "outline"} 
+            size="sm"
+            onClick={handleSubscribe}
+          >
             <Bell className="h-4 w-4 mr-2" />
-            Subscribe
+            {isSubscribed ? "Subscribed" : "Subscribe"}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleFilter}>
             Filter
           </Button>
         </div>
@@ -223,20 +290,29 @@ const AnnouncementsFeed = () => {
               <div className="flex items-center justify-between">
                 <div className="flex space-x-3">
                   {announcement.rsvpCount && (
-                    <Button variant="outline" size="sm" className="bg-gradient-accent text-accent-foreground border-accent">
+                    <Button 
+                      variant={rsvpedEvents.includes(announcement.id) ? "default" : "outline"}
+                      size="sm" 
+                      className={rsvpedEvents.includes(announcement.id) ? "bg-gradient-accent text-accent-foreground" : ""}
+                      onClick={() => handleRSVP(announcement.id)}
+                    >
                       <Users className="h-4 w-4 mr-2" />
-                      RSVP ({announcement.rsvpCount})
+                      {rsvpedEvents.includes(announcement.id) ? "RSVP'd" : "RSVP"} ({announcement.rsvpCount + (rsvpedEvents.includes(announcement.id) ? 1 : 0)})
                     </Button>
                   )}
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={() => handleLearnMore(announcement.title)}>
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Learn More
                   </Button>
                 </div>
                 
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant={reminders.includes(announcement.id) ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleReminder(announcement.id)}
+                >
                   <Bell className="h-4 w-4 mr-2" />
-                  Remind Me
+                  {reminders.includes(announcement.id) ? "Reminder Set" : "Remind Me"}
                 </Button>
               </div>
             </CardContent>

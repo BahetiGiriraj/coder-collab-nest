@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import ChatSidebar from "@/components/layout/ChatSidebar";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,8 @@ import { Input } from "@/components/ui/input";
 
 const Achievements = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { toast } = useToast();
+  const [endorsedAchievements, setEndorsedAchievements] = useState<string[]>([]);
 
   const achievements = [
     {
@@ -165,6 +168,50 @@ const Achievements = () => {
     return <Badge variant="outline" className="text-xs">Pending</Badge>;
   };
 
+  const handleAddAchievement = () => {
+    toast({
+      title: "Add Achievement",
+      description: "Achievement submission form coming soon"
+    });
+  };
+
+  const handleMyPortfolio = () => {
+    toast({
+      title: "My Portfolio",
+      description: "Loading your achievements portfolio"
+    });
+  };
+
+  const handleFilter = () => {
+    toast({
+      title: "Filters",
+      description: "Filter options coming soon"
+    });
+  };
+
+  const handleEndorse = (achievementId: string, title: string) => {
+    if (endorsedAchievements.includes(achievementId)) {
+      setEndorsedAchievements(endorsedAchievements.filter(id => id !== achievementId));
+      toast({
+        title: "Endorsement removed",
+        description: `Removed endorsement from ${title}`
+      });
+    } else {
+      setEndorsedAchievements([...endorsedAchievements, achievementId]);
+      toast({
+        title: "Endorsed!",
+        description: `You endorsed ${title}`
+      });
+    }
+  };
+
+  const handleViewDetails = (title: string) => {
+    toast({
+      title: "Achievement Details",
+      description: `Loading full details for ${title}`
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-bg">
       <Header />
@@ -180,11 +227,11 @@ const Achievements = () => {
               <p className="text-muted-foreground">Celebrate success and build your professional portfolio</p>
             </div>
             <div className="flex space-x-3">
-              <Button className="bg-gradient-accent">
+              <Button className="bg-gradient-accent" onClick={handleAddAchievement}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Achievement
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleMyPortfolio}>
                 <Trophy className="h-4 w-4 mr-2" />
                 My Portfolio
               </Button>
@@ -200,7 +247,7 @@ const Achievements = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleFilter}>
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
@@ -333,11 +380,21 @@ const Achievements = () => {
 
                     {/* Actions */}
                     <div className="flex space-x-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Star className="h-4 w-4 mr-2" />
-                        Endorse
+                      <Button 
+                        size="sm" 
+                        variant={endorsedAchievements.includes(achievement.id) ? "default" : "outline"}
+                        className="flex-1"
+                        onClick={() => handleEndorse(achievement.id, achievement.title)}
+                      >
+                        <Star className={`h-4 w-4 mr-2 ${endorsedAchievements.includes(achievement.id) ? "fill-current" : ""}`} />
+                        {endorsedAchievements.includes(achievement.id) ? "Endorsed" : "Endorse"}
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => handleViewDetails(achievement.title)}
+                      >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         View Details
                       </Button>

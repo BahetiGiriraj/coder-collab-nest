@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import ChatSidebar from "@/components/layout/ChatSidebar";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,9 @@ import { Input } from "@/components/ui/input";
 
 const Repositories = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { toast } = useToast();
+  const [starredRepos, setStarredRepos] = useState<string[]>([]);
+  const [forkedRepos, setForkedRepos] = useState<string[]>([]);
 
   const repositories = [
     {
@@ -151,6 +155,72 @@ const Repositories = () => {
     return colors[language] || "bg-muted";
   };
 
+  const handleNewRepository = () => {
+    toast({
+      title: "Create Repository",
+      description: "Repository creation form coming soon"
+    });
+  };
+
+  const handleMyProjects = () => {
+    toast({
+      title: "My Projects",
+      description: "Loading your repositories"
+    });
+  };
+
+  const handleFilter = () => {
+    toast({
+      title: "Filters",
+      description: "Filter options coming soon"
+    });
+  };
+
+  const handleStar = (repoId: string, repoName: string) => {
+    if (starredRepos.includes(repoId)) {
+      setStarredRepos(starredRepos.filter(id => id !== repoId));
+      toast({
+        title: "Unstarred",
+        description: `Removed ${repoName} from starred repositories`
+      });
+    } else {
+      setStarredRepos([...starredRepos, repoId]);
+      toast({
+        title: "Starred!",
+        description: `Added ${repoName} to starred repositories`
+      });
+    }
+  };
+
+  const handleFork = (repoId: string, repoName: string) => {
+    if (forkedRepos.includes(repoId)) {
+      toast({
+        title: "Already forked",
+        description: `You've already forked ${repoName}`
+      });
+    } else {
+      setForkedRepos([...forkedRepos, repoId]);
+      toast({
+        title: "Forked!",
+        description: `Successfully forked ${repoName} to your account`
+      });
+    }
+  };
+
+  const handleDemo = (repoName: string) => {
+    toast({
+      title: "Opening demo",
+      description: `Loading live demo for ${repoName}`
+    });
+  };
+
+  const handleViewCode = (repoName: string) => {
+    toast({
+      title: "Opening repository",
+      description: `Loading code for ${repoName}`
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-bg">
       <Header />
@@ -166,11 +236,11 @@ const Repositories = () => {
               <p className="text-muted-foreground">Showcase your code and discover amazing student projects</p>
             </div>
             <div className="flex space-x-3">
-              <Button className="bg-gradient-accent">
+              <Button className="bg-gradient-accent" onClick={handleNewRepository}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Repository
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleMyProjects}>
                 <FolderGit2 className="h-4 w-4 mr-2" />
                 My Projects
               </Button>
@@ -186,7 +256,7 @@ const Repositories = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleFilter}>
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
@@ -297,21 +367,31 @@ const Repositories = () => {
 
                   {/* Actions */}
                   <div className="flex space-x-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <Star className="h-4 w-4 mr-2" />
-                      Star
+                    <Button 
+                      size="sm" 
+                      variant={starredRepos.includes(repo.id) ? "default" : "outline"} 
+                      className="flex-1"
+                      onClick={() => handleStar(repo.id, repo.name)}
+                    >
+                      <Star className={`h-4 w-4 mr-2 ${starredRepos.includes(repo.id) ? "fill-current" : ""}`} />
+                      {starredRepos.includes(repo.id) ? "Starred" : "Star"}
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant={forkedRepos.includes(repo.id) ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => handleFork(repo.id, repo.name)}
+                    >
                       <GitFork className="h-4 w-4 mr-2" />
-                      Fork
+                      {forkedRepos.includes(repo.id) ? "Forked" : "Fork"}
                     </Button>
                     {repo.hasDemo && (
-                      <Button size="sm" className="bg-gradient-accent">
+                      <Button size="sm" className="bg-gradient-accent" onClick={() => handleDemo(repo.name)}>
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Demo
                       </Button>
                     )}
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleViewCode(repo.name)}>
                       <Code className="h-4 w-4" />
                     </Button>
                   </div>

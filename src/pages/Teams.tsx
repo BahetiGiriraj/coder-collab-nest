@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/layout/Header";
 import ChatSidebar from "@/components/layout/ChatSidebar";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ import { Input } from "@/components/ui/input";
 
 const Teams = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { toast } = useToast();
+  const [joinedTeams, setJoinedTeams] = useState<string[]>([]);
 
   const teams = [
     {
@@ -90,6 +93,59 @@ const Teams = () => {
     }
   };
 
+  const handleCreateTeam = () => {
+    toast({
+      title: "Create Team",
+      description: "Team creation form coming soon"
+    });
+  };
+
+  const handleBrowseAll = () => {
+    toast({
+      title: "Browsing Teams",
+      description: "Showing all available teams"
+    });
+  };
+
+  const handleFilter = () => {
+    toast({
+      title: "Filters",
+      description: "Filter options coming soon"
+    });
+  };
+
+  const handleJoinTeam = (teamId: string, teamName: string, isFull: boolean) => {
+    if (isFull) return;
+    
+    if (joinedTeams.includes(teamId)) {
+      setJoinedTeams(joinedTeams.filter(id => id !== teamId));
+      toast({
+        title: "Left team",
+        description: `You've left ${teamName}`
+      });
+    } else {
+      setJoinedTeams([...joinedTeams, teamId]);
+      toast({
+        title: "Joined team!",
+        description: `Welcome to ${teamName}!`
+      });
+    }
+  };
+
+  const handleChat = (teamName: string) => {
+    toast({
+      title: "Opening chat",
+      description: `Starting conversation with ${teamName}`
+    });
+  };
+
+  const handleViewDetails = (teamName: string) => {
+    toast({
+      title: "Team Details",
+      description: `Loading details for ${teamName}`
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-bg">
       <Header />
@@ -105,11 +161,11 @@ const Teams = () => {
               <p className="text-muted-foreground">Join forces with fellow coders on amazing projects</p>
             </div>
             <div className="flex space-x-3">
-              <Button className="bg-gradient-accent">
+              <Button className="bg-gradient-accent" onClick={handleCreateTeam}>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Team
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleBrowseAll}>
                 <Users className="h-4 w-4 mr-2" />
                 Browse All
               </Button>
@@ -125,7 +181,7 @@ const Teams = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleFilter}>
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
@@ -220,18 +276,24 @@ const Teams = () => {
                   {/* Actions */}
                   <div className="flex space-x-2 pt-2">
                     <Button 
-                      className="flex-1 bg-gradient-accent" 
+                      className={joinedTeams.includes(team.id) ? "flex-1" : "flex-1 bg-gradient-accent"}
+                      variant={joinedTeams.includes(team.id) ? "outline" : "default"}
                       size="sm"
-                      disabled={team.totalMembers >= team.maxMembers}
+                      disabled={team.totalMembers >= team.maxMembers && !joinedTeams.includes(team.id)}
+                      onClick={() => handleJoinTeam(team.id, team.name, team.totalMembers >= team.maxMembers)}
                     >
                       <Users className="h-4 w-4 mr-2" />
-                      {team.totalMembers >= team.maxMembers ? "Team Full" : "Join Team"}
+                      {team.totalMembers >= team.maxMembers && !joinedTeams.includes(team.id) 
+                        ? "Team Full" 
+                        : joinedTeams.includes(team.id) 
+                          ? "Leave Team" 
+                          : "Join Team"}
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleChat(team.name)}>
                       <MessageCircle className="h-4 w-4 mr-2" />
                       Chat
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(team.name)}>
                       <Target className="h-4 w-4" />
                     </Button>
                   </div>
