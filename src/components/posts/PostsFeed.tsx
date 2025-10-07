@@ -140,6 +140,25 @@ const [loading, setLoading] = useState(true);
 
   const handleCreatePost = () => {
     if (newPostContent.trim()) {
+      const newPost = {
+        id: String(Date.now()),
+        author: {
+          name: "You",
+          username: "you",
+          avatar: "/placeholder.svg",
+          year: "Student"
+        },
+        timestamp: "Just now",
+        content: newPostContent,
+        tags: [],
+        likes: 0,
+        comments: 0,
+        hasLiked: false,
+        hasBookmarked: false
+      };
+      
+      setPosts([newPost, ...posts]);
+      
       toast({
         title: "Post created!",
         description: "Your post has been published successfully"
