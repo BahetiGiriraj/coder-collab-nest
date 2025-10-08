@@ -14,7 +14,8 @@ import {
   Image,
   Video,
   MoreHorizontal,
-  Send
+  Send,
+  Trash2
 } from "lucide-react";
 
 const PostsFeed = () => {
@@ -23,6 +24,7 @@ const PostsFeed = () => {
   const [posts, setPosts] = useState([
     {
       id: "1",
+      userId: "alexdev",
       author: {
         name: "Alex Thompson",
         username: "alexdev",
@@ -38,12 +40,24 @@ const [loading, setLoading] = useState(true);
 // This gets passed down 5+ levels...
 <UserProfile user={user} setUser={setUser} />`,
       likes: 12,
-      comments: 8,
+      commentsList: [
+        {
+          id: "c1",
+          author: {
+            name: "Jordan Lee",
+            username: "jordanl",
+            avatar: "/placeholder.svg"
+          },
+          content: "Have you considered using Context API or Redux?",
+          timestamp: "1 hour ago"
+        }
+      ],
       hasLiked: false,
       hasBookmarked: false
     },
     {
       id: "2",
+      userId: "sarahc",
       author: {
         name: "Sarah Chen",
         username: "sarahc",
@@ -55,12 +69,13 @@ const [loading, setLoading] = useState(true);
       tags: ["Data Structures", "Algorithms", "Python"],
       image: "/placeholder.svg",
       likes: 24,
-      comments: 15,
+      commentsList: [],
       hasLiked: true,
       hasBookmarked: true
     },
     {
       id: "3",
+      userId: "mikerod",
       author: {
         name: "Mike Rodriguez",
         username: "mikerod",
@@ -71,7 +86,7 @@ const [loading, setLoading] = useState(true);
       content: "Quick tip: Use CSS Grid for layout and Flexbox for component alignment. Game changer for responsive design! Here's a simple example that solved my layout issues.",
       tags: ["CSS", "Web Design", "Frontend"],
       likes: 18,
-      comments: 6,
+      commentsList: [],
       hasLiked: false,
       hasBookmarked: false
     }
@@ -124,9 +139,20 @@ const [loading, setLoading] = useState(true);
 
   const handleSendComment = (postId: string) => {
     if (newComment.trim()) {
+      const newCommentObj = {
+        id: `c${Date.now()}`,
+        author: {
+          name: "You",
+          username: "you",
+          avatar: "/placeholder.svg"
+        },
+        content: newComment,
+        timestamp: "Just now"
+      };
+
       setPosts(posts.map(post => 
         post.id === postId 
-          ? { ...post, comments: post.comments + 1 }
+          ? { ...post, commentsList: [...post.commentsList, newCommentObj] }
           : post
       ));
       toast({
@@ -134,7 +160,6 @@ const [loading, setLoading] = useState(true);
         description: "Your comment has been added"
       });
       setNewComment("");
-      setActiveCommentPost(null);
     }
   };
 
@@ -142,6 +167,7 @@ const [loading, setLoading] = useState(true);
     if (newPostContent.trim()) {
       const newPost = {
         id: String(Date.now()),
+        userId: "you",
         author: {
           name: "You",
           username: "you",
@@ -152,7 +178,7 @@ const [loading, setLoading] = useState(true);
         content: newPostContent,
         tags: [],
         likes: 0,
-        comments: 0,
+        commentsList: [],
         hasLiked: false,
         hasBookmarked: false
       };
@@ -165,6 +191,14 @@ const [loading, setLoading] = useState(true);
       });
       setNewPostContent("");
     }
+  };
+
+  const handleDeletePost = (postId: string) => {
+    setPosts(posts.filter(post => post.id !== postId));
+    toast({
+      title: "Post deleted",
+      description: "Your post has been removed"
+    });
   };
 
   const handleMediaAction = (type: string) => {
@@ -238,9 +272,16 @@ const [loading, setLoading] = useState(true);
                   </p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+              {post.userId === "you" && (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => handleDeletePost(post.id)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </CardHeader>
 
@@ -293,7 +334,7 @@ const [loading, setLoading] = useState(true);
                   onClick={() => handleComment(post.id)}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  {post.comments}
+                  {post.commentsList.length}
                 </Button>
 
                 <Button variant="ghost" size="sm" onClick={() => handleShare(post.id)}>
@@ -314,7 +355,33 @@ const [loading, setLoading] = useState(true);
 
             {/* Comment Section */}
             {activeCommentPost === post.id && (
-              <div className="w-full mt-4 pt-4 border-t border-border">
+              <div className="w-full mt-4 pt-4 border-t border-border space-y-4">
+                {/* Display existing comments */}
+                {post.commentsList.length > 0 && (
+                  <div className="space-y-4 mb-4">
+                    {post.commentsList.map((comment) => (
+                      <div key={comment.id} className="flex space-x-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={comment.author.avatar} />
+                          <AvatarFallback>
+                            {comment.author.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="bg-muted rounded-lg p-3">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="font-semibold text-sm">{comment.author.name}</span>
+                              <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
+                            </div>
+                            <p className="text-sm">{comment.content}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Comment input */}
                 <div className="flex space-x-3">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src="/placeholder.svg" />
