@@ -49,6 +49,13 @@ All colors MUST be HSL.
     --brand-emerald: 158 64% 52%;
     --brand-amber: 43 96% 56%;
 
+    /* Campus colors */
+    --campus-blue: 217 91% 60%;
+    --campus-navy: 250 84% 28%;
+    --campus-purple: 292 84% 61%;
+    --campus-green: 158 64% 52%;
+    --campus-orange: 43 96% 56%;
+
     /* Premium gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
@@ -110,6 +117,13 @@ All colors MUST be HSL.
     --brand-blue: 217 91% 68%;
     --brand-emerald: 158 64% 60%;
     --brand-amber: 43 96% 64%;
+
+    /* Campus colors dark mode */
+    --campus-blue: 217 91% 68%;
+    --campus-navy: 250 84% 64%;
+    --campus-purple: 292 84% 71%;
+    --campus-green: 158 64% 60%;
+    --campus-orange: 43 96% 64%;
 
     /* Dark mode gradients */
     --gradient-bg: linear-gradient(180deg, hsl(var(--background)), hsl(217 32% 12%));

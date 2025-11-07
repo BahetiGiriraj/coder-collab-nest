@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { 
   Calendar, 
   Clock, 
@@ -16,10 +18,71 @@ import {
 
 const AnnouncementsFeed = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [rsvpedEvents, setRsvpedEvents] = useState<string[]>([]);
   const [reminders, setReminders] = useState<string[]>([]);
+  const [rsvpCounts, setRsvpCounts] = useState<Record<string, number>>({});
   
+  useEffect(() => {
+    if (user) {
+      fetchUserPreferences();
+      fetchRsvpCounts();
+    }
+  }, [user]);
+
+  const fetchUserPreferences = async () => {
+    if (!user) return;
+
+    try {
+      // Check subscription status
+      const { data: subData } = await supabase
+        .from("notification_subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      
+      setIsSubscribed(!!subData);
+
+      // Fetch RSVPs
+      const { data: rsvpData } = await supabase
+        .from("announcement_rsvps")
+        .select("announcement_id")
+        .eq("user_id", user.id);
+      
+      setRsvpedEvents(rsvpData?.map(r => r.announcement_id) || []);
+
+      // Fetch reminders
+      const { data: reminderData } = await supabase
+        .from("announcement_reminders")
+        .select("announcement_id")
+        .eq("user_id", user.id);
+      
+      setReminders(reminderData?.map(r => r.announcement_id) || []);
+    } catch (error: any) {
+      console.error("Error fetching preferences:", error);
+    }
+  };
+
+  const fetchRsvpCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("announcement_rsvps")
+        .select("announcement_id");
+      
+      if (error) throw error;
+
+      const counts: Record<string, number> = {};
+      data?.forEach(rsvp => {
+        counts[rsvp.announcement_id] = (counts[rsvp.announcement_id] || 0) + 1;
+      });
+      
+      setRsvpCounts(counts);
+    } catch (error: any) {
+      console.error("Error fetching RSVP counts:", error);
+    }
+  };
+
   const announcements = [
     {
       id: "1",
@@ -36,7 +99,7 @@ const AnnouncementsFeed = () => {
       location: "Engineering Building",
       timestamp: "2 hours ago",
       tags: ["Hackathon", "Competition", "Prizes"],
-      rsvpCount: 156
+      baseRsvpCount: 156
     },
     {
       id: "2",
@@ -68,7 +131,7 @@ const AnnouncementsFeed = () => {
       location: "Student Center Room 201",
       timestamp: "1 day ago",
       tags: ["Women in Tech", "Panel", "Networking"],
-      rsvpCount: 42
+      baseRsvpCount: 42
     },
     {
       id: "4",
@@ -99,7 +162,7 @@ const AnnouncementsFeed = () => {
       location: "Computer Lab B",
       timestamp: "5 days ago",
       tags: ["Workshop", "Git", "GitHub", "Beginner"],
-      rsvpCount: 28
+      baseRsvpCount: 28
     }
   ];
 
@@ -124,28 +187,81 @@ const AnnouncementsFeed = () => {
     }
   };
 
-  const handleSubscribe = () => {
-    setIsSubscribed(!isSubscribed);
-    toast({
-      title: isSubscribed ? "Unsubscribed" : "Subscribed!",
-      description: isSubscribed 
-        ? "You will no longer receive notifications" 
-        : "You'll now receive notifications for new announcements"
-    });
+  const handleSubscribe = async () => {
+    if (!user) return;
+
+    try {
+      if (isSubscribed) {
+        await supabase
+          .from("notification_subscriptions")
+          .delete()
+          .eq("user_id", user.id);
+        
+        setIsSubscribed(false);
+        toast({
+          title: "Unsubscribed",
+          description: "You will no longer receive notifications"
+        });
+      } else {
+        await supabase
+          .from("notification_subscriptions")
+          .insert({ user_id: user.id });
+        
+        setIsSubscribed(true);
+        toast({
+          title: "Subscribed!",
+          description: "You'll now receive notifications for new announcements"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleRSVP = (announcementId: string) => {
-    if (rsvpedEvents.includes(announcementId)) {
-      setRsvpedEvents(rsvpedEvents.filter(id => id !== announcementId));
+  const handleRSVP = async (announcementId: string) => {
+    if (!user) return;
+
+    try {
+      if (rsvpedEvents.includes(announcementId)) {
+        await supabase
+          .from("announcement_rsvps")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("announcement_id", announcementId);
+        
+        setRsvpedEvents(rsvpedEvents.filter(id => id !== announcementId));
+        setRsvpCounts(prev => ({
+          ...prev,
+          [announcementId]: (prev[announcementId] || 0) - 1
+        }));
+        toast({
+          title: "RSVP Cancelled",
+          description: "Your RSVP has been cancelled"
+        });
+      } else {
+        await supabase
+          .from("announcement_rsvps")
+          .insert({ user_id: user.id, announcement_id: announcementId });
+        
+        setRsvpedEvents([...rsvpedEvents, announcementId]);
+        setRsvpCounts(prev => ({
+          ...prev,
+          [announcementId]: (prev[announcementId] || 0) + 1
+        }));
+        toast({
+          title: "RSVP Confirmed!",
+          description: "We'll see you there!"
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "RSVP Cancelled",
-        description: "Your RSVP has been cancelled"
-      });
-    } else {
-      setRsvpedEvents([...rsvpedEvents, announcementId]);
-      toast({
-        title: "RSVP Confirmed!",
-        description: "We'll see you there!"
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
     }
   };
@@ -157,18 +273,38 @@ const AnnouncementsFeed = () => {
     });
   };
 
-  const handleReminder = (announcementId: string) => {
-    if (reminders.includes(announcementId)) {
-      setReminders(reminders.filter(id => id !== announcementId));
+  const handleReminder = async (announcementId: string) => {
+    if (!user) return;
+
+    try {
+      if (reminders.includes(announcementId)) {
+        await supabase
+          .from("announcement_reminders")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("announcement_id", announcementId);
+        
+        setReminders(reminders.filter(id => id !== announcementId));
+        toast({
+          title: "Reminder removed",
+          description: "You won't be reminded about this event"
+        });
+      } else {
+        await supabase
+          .from("announcement_reminders")
+          .insert({ user_id: user.id, announcement_id: announcementId });
+        
+        setReminders([...reminders, announcementId]);
+        toast({
+          title: "Reminder set!",
+          description: "We'll remind you about this event"
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Reminder removed",
-        description: "You won't be reminded about this event"
-      });
-    } else {
-      setReminders([...reminders, announcementId]);
-      toast({
-        title: "Reminder set!",
-        description: "We'll remind you about this event"
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
     }
   };
@@ -178,6 +314,12 @@ const AnnouncementsFeed = () => {
       title: "Filters",
       description: "Filter options coming soon"
     });
+  };
+
+  const getRsvpCount = (announcement: any) => {
+    const dbCount = rsvpCounts[announcement.id] || 0;
+    const baseCount = announcement.baseRsvpCount || 0;
+    return dbCount + baseCount;
   };
 
   return (
@@ -289,7 +431,7 @@ const AnnouncementsFeed = () => {
               {/* Actions */}
               <div className="flex items-center justify-between">
                 <div className="flex space-x-3">
-                  {announcement.rsvpCount && (
+                  {announcement.baseRsvpCount !== undefined && (
                     <Button 
                       variant={rsvpedEvents.includes(announcement.id) ? "default" : "outline"}
                       size="sm" 
@@ -297,7 +439,7 @@ const AnnouncementsFeed = () => {
                       onClick={() => handleRSVP(announcement.id)}
                     >
                       <Users className="h-4 w-4 mr-2" />
-                      {rsvpedEvents.includes(announcement.id) ? "RSVP'd" : "RSVP"} ({announcement.rsvpCount + (rsvpedEvents.includes(announcement.id) ? 1 : 0)})
+                      {rsvpedEvents.includes(announcement.id) ? "RSVP'd" : "RSVP"} ({getRsvpCount(announcement)})
                     </Button>
                   )}
                   <Button variant="ghost" size="sm" onClick={() => handleLearnMore(announcement.title)}>

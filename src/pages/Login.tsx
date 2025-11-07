@@ -6,14 +6,16 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Code2, Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
@@ -27,14 +29,18 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Authentication logic will be added when Supabase is connected
-    console.log("Login attempt:", formData);
-    // Set authenticated state
-    login();
-    // Redirect to main page
-    navigate("/");
+    try {
+      await login(formData.email, formData.password);
+      navigate("/");
+    } catch (error: any) {
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -64,13 +70,13 @@ const Login = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="username"
-                    name="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={formData.username}
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={formData.email}
                     onChange={handleInputChange}
                     required
                   />
@@ -138,7 +144,7 @@ const Login = () => {
 
           <div className="text-center mt-6">
             <p className="text-sm text-muted-foreground">
-              Note: Since Lovable Cloud isn't enabled yet, this is a demo login.
+              Secure authentication powered by Lovable Cloud
             </p>
           </div>
         </div>

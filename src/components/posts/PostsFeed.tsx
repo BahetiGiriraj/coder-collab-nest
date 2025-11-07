@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { 
   Heart, 
   MessageCircle, 
@@ -13,123 +15,230 @@ import {
   Code,
   Image,
   Video,
-  MoreHorizontal,
   Send,
   Trash2
 } from "lucide-react";
 
+interface Profile {
+  id: string;
+  username: string;
+  full_name: string;
+  avatar_url: string | null;
+  year: string | null;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  profiles: Profile;
+}
+
+interface Post {
+  id: string;
+  user_id: string;
+  content: string;
+  code: string | null;
+  image: string | null;
+  tags: string[];
+  likes: number;
+  created_at: string;
+  profiles: Profile;
+  comments: Comment[];
+  hasLiked: boolean;
+  hasBookmarked: boolean;
+}
+
 const PostsFeed = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [newPostContent, setNewPostContent] = useState("");
-  const [posts, setPosts] = useState([
-    {
-      id: "1",
-      userId: "alexdev",
-      author: {
-        name: "Alex Thompson",
-        username: "alexdev",
-        avatar: "/placeholder.svg",
-        year: "Junior"
-      },
-      timestamp: "2 hours ago",
-      content: "Struggling with this React state management issue. Has anyone dealt with prop drilling in a large component tree? Looking for best practices and maybe some code review.",
-      tags: ["React", "JavaScript", "State Management"],
-      code: `const [user, setUser] = useState(null);
-const [loading, setLoading] = useState(true);
-
-// This gets passed down 5+ levels...
-<UserProfile user={user} setUser={setUser} />`,
-      likes: 12,
-      commentsList: [
-        {
-          id: "c1",
-          author: {
-            name: "Jordan Lee",
-            username: "jordanl",
-            avatar: "/placeholder.svg"
-          },
-          content: "Have you considered using Context API or Redux?",
-          timestamp: "1 hour ago"
-        }
-      ],
-      hasLiked: false,
-      hasBookmarked: false
-    },
-    {
-      id: "2",
-      userId: "sarahc",
-      author: {
-        name: "Sarah Chen",
-        username: "sarahc",
-        avatar: "/placeholder.svg",
-        year: "Senior"
-      },
-      timestamp: "4 hours ago",
-      content: "Just finished implementing a binary search tree for our data structures class! The visualization came out really clean. Anyone want to collaborate on more algorithm visualizations?",
-      tags: ["Data Structures", "Algorithms", "Python"],
-      image: "/placeholder.svg",
-      likes: 24,
-      commentsList: [],
-      hasLiked: true,
-      hasBookmarked: true
-    },
-    {
-      id: "3",
-      userId: "mikerod",
-      author: {
-        name: "Mike Rodriguez",
-        username: "mikerod",
-        avatar: "/placeholder.svg",
-        year: "Sophomore"
-      },
-      timestamp: "6 hours ago",
-      content: "Quick tip: Use CSS Grid for layout and Flexbox for component alignment. Game changer for responsive design! Here's a simple example that solved my layout issues.",
-      tags: ["CSS", "Web Design", "Frontend"],
-      likes: 18,
-      commentsList: [],
-      hasLiked: false,
-      hasBookmarked: false
-    }
-  ]);
-
+  const [posts, setPosts] = useState<Post[]>([]);
   const [newComment, setNewComment] = useState("");
   const [activeCommentPost, setActiveCommentPost] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLike = (postId: string) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { 
-            ...post, 
-            hasLiked: !post.hasLiked,
-            likes: post.hasLiked ? post.likes - 1 : post.likes + 1
-          }
-        : post
-    ));
-    const post = posts.find(p => p.id === postId);
-    toast({
-      title: post?.hasLiked ? "Unliked" : "Liked!",
-      description: post?.hasLiked ? "Removed from liked posts" : "Added to liked posts"
-    });
+  useEffect(() => {
+    if (user) {
+      fetchPosts();
+    }
+  }, [user]);
+
+  const fetchPosts = async () => {
+    try {
+      // Fetch posts with profiles
+      const { data: postsData, error: postsError } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles (*)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (postsError) throw postsError;
+
+      // Fetch comments for all posts
+      const { data: commentsData, error: commentsError } = await supabase
+        .from("comments")
+        .select(`
+          *,
+          profiles (*)
+        `)
+        .order("created_at", { ascending: true });
+
+      if (commentsError) throw commentsError;
+
+      // Fetch user's likes
+      const { data: likesData, error: likesError } = await supabase
+        .from("post_likes")
+        .select("post_id")
+        .eq("user_id", user?.id);
+
+      if (likesError) throw likesError;
+
+      // Fetch user's bookmarks
+      const { data: bookmarksData, error: bookmarksError } = await supabase
+        .from("post_bookmarks")
+        .select("post_id")
+        .eq("user_id", user?.id);
+
+      if (bookmarksError) throw bookmarksError;
+
+      const likedPostIds = new Set(likesData?.map(like => like.post_id) || []);
+      const bookmarkedPostIds = new Set(bookmarksData?.map(bm => bm.post_id) || []);
+
+      const postsWithComments = postsData?.map(post => ({
+        ...post,
+        comments: commentsData?.filter(comment => comment.post_id === post.id) || [],
+        hasLiked: likedPostIds.has(post.id),
+        hasBookmarked: bookmarkedPostIds.has(post.id),
+      })) || [];
+
+      setPosts(postsWithComments);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleBookmark = (postId: string) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, hasBookmarked: !post.hasBookmarked }
-        : post
-    ));
+  const handleLike = async (postId: string) => {
+    if (!user) return;
+
     const post = posts.find(p => p.id === postId);
-    toast({
-      title: post?.hasBookmarked ? "Removed bookmark" : "Bookmarked!",
-      description: post?.hasBookmarked ? "Removed from saved posts" : "Added to saved posts"
-    });
+    if (!post) return;
+
+    try {
+      if (post.hasLiked) {
+        await supabase
+          .from("post_likes")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("post_id", postId);
+
+        await supabase
+          .from("posts")
+          .update({ likes: post.likes - 1 })
+          .eq("id", postId);
+
+        setPosts(posts.map(p => 
+          p.id === postId 
+            ? { ...p, hasLiked: false, likes: p.likes - 1 }
+            : p
+        ));
+
+        toast({
+          title: "Unliked",
+          description: "Removed from liked posts",
+        });
+      } else {
+        await supabase
+          .from("post_likes")
+          .insert({ user_id: user.id, post_id: postId });
+
+        await supabase
+          .from("posts")
+          .update({ likes: post.likes + 1 })
+          .eq("id", postId);
+
+        setPosts(posts.map(p => 
+          p.id === postId 
+            ? { ...p, hasLiked: true, likes: p.likes + 1 }
+            : p
+        ));
+
+        toast({
+          title: "Liked!",
+          description: "Added to liked posts",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBookmark = async (postId: string) => {
+    if (!user) return;
+
+    const post = posts.find(p => p.id === postId);
+    if (!post) return;
+
+    try {
+      if (post.hasBookmarked) {
+        await supabase
+          .from("post_bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("post_id", postId);
+
+        setPosts(posts.map(p => 
+          p.id === postId 
+            ? { ...p, hasBookmarked: false }
+            : p
+        ));
+
+        toast({
+          title: "Removed bookmark",
+          description: "Removed from saved posts",
+        });
+      } else {
+        await supabase
+          .from("post_bookmarks")
+          .insert({ user_id: user.id, post_id: postId });
+
+        setPosts(posts.map(p => 
+          p.id === postId 
+            ? { ...p, hasBookmarked: true }
+            : p
+        ));
+
+        toast({
+          title: "Bookmarked!",
+          description: "Added to saved posts",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = (postId: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${postId}`);
     toast({
       title: "Link copied!",
-      description: "Post link copied to clipboard"
+      description: "Post link copied to clipboard",
     });
   };
 
@@ -137,76 +246,127 @@ const [loading, setLoading] = useState(true);
     setActiveCommentPost(activeCommentPost === postId ? null : postId);
   };
 
-  const handleSendComment = (postId: string) => {
-    if (newComment.trim()) {
-      const newCommentObj = {
-        id: `c${Date.now()}`,
-        author: {
-          name: "You",
-          username: "you",
-          avatar: "/placeholder.svg"
-        },
-        content: newComment,
-        timestamp: "Just now"
-      };
+  const handleSendComment = async (postId: string) => {
+    if (!user || !newComment.trim()) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("comments")
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          content: newComment,
+        })
+        .select(`
+          *,
+          profiles (*)
+        `)
+        .single();
+
+      if (error) throw error;
 
       setPosts(posts.map(post => 
         post.id === postId 
-          ? { ...post, commentsList: [...post.commentsList, newCommentObj] }
+          ? { ...post, comments: [...post.comments, data] }
           : post
       ));
+
       toast({
         title: "Comment posted!",
-        description: "Your comment has been added"
+        description: "Your comment has been added",
       });
       setNewComment("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
-  const handleCreatePost = () => {
-    if (newPostContent.trim()) {
-      const newPost = {
-        id: String(Date.now()),
-        userId: "you",
-        author: {
-          name: "You",
-          username: "you",
-          avatar: "/placeholder.svg",
-          year: "Student"
-        },
-        timestamp: "Just now",
-        content: newPostContent,
-        tags: [],
-        likes: 0,
-        commentsList: [],
-        hasLiked: false,
-        hasBookmarked: false
-      };
-      
-      setPosts([newPost, ...posts]);
+  const handleCreatePost = async () => {
+    if (!user || !newPostContent.trim()) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("posts")
+        .insert({
+          user_id: user.id,
+          content: newPostContent,
+          tags: [],
+          likes: 0,
+        })
+        .select(`
+          *,
+          profiles (*)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      setPosts([{ ...data, comments: [], hasLiked: false, hasBookmarked: false }, ...posts]);
       
       toast({
         title: "Post created!",
-        description: "Your post has been published successfully"
+        description: "Your post has been published successfully",
       });
       setNewPostContent("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
-  const handleDeletePost = (postId: string) => {
-    setPosts(posts.filter(post => post.id !== postId));
-    toast({
-      title: "Post deleted",
-      description: "Your post has been removed"
-    });
+  const handleDeletePost = async (postId: string) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      setPosts(posts.filter(post => post.id !== postId));
+      toast({
+        title: "Post deleted",
+        description: "Your post has been removed",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleMediaAction = (type: string) => {
     toast({
       title: `${type} selected`,
-      description: `${type} upload feature coming soon`
+      description: `${type} upload feature coming soon`,
     });
   };
+
+  const getTimeAgo = (date: string) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+    if (seconds < 60) return "Just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  };
+
+  if (loading) {
+    return <div className="text-center py-8">Loading posts...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -260,19 +420,19 @@ const [loading, setLoading] = useState(true);
             <div className="flex items-start justify-between">
               <div className="flex space-x-3">
                 <Avatar>
-                  <AvatarImage src={post.author.avatar} />
+                  <AvatarImage src={post.profiles.avatar_url || "/placeholder.svg"} />
                   <AvatarFallback>
-                    {post.author.name.split(' ').map(n => n[0]).join('')}
+                    {post.profiles.full_name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h4 className="font-semibold">{post.author.name}</h4>
+                  <h4 className="font-semibold">{post.profiles.full_name}</h4>
                   <p className="text-sm text-muted-foreground">
-                    @{post.author.username} • {post.author.year} • {post.timestamp}
+                    @{post.profiles.username} • {post.profiles.year || "Student"} • {getTimeAgo(post.created_at)}
                   </p>
                 </div>
               </div>
-              {post.userId === "you" && (
+              {post.user_id === user?.id && (
                 <Button 
                   variant="ghost" 
                   size="icon"
@@ -334,7 +494,7 @@ const [loading, setLoading] = useState(true);
                   onClick={() => handleComment(post.id)}
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  {post.commentsList.length}
+                  {post.comments.length}
                 </Button>
 
                 <Button variant="ghost" size="sm" onClick={() => handleShare(post.id)}>
@@ -357,21 +517,21 @@ const [loading, setLoading] = useState(true);
             {activeCommentPost === post.id && (
               <div className="w-full mt-4 pt-4 border-t border-border space-y-4">
                 {/* Display existing comments */}
-                {post.commentsList.length > 0 && (
+                {post.comments.length > 0 && (
                   <div className="space-y-4 mb-4">
-                    {post.commentsList.map((comment) => (
+                    {post.comments.map((comment) => (
                       <div key={comment.id} className="flex space-x-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={comment.author.avatar} />
+                          <AvatarImage src={comment.profiles.avatar_url || "/placeholder.svg"} />
                           <AvatarFallback>
-                            {comment.author.name.split(' ').map(n => n[0]).join('')}
+                            {comment.profiles.full_name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="bg-muted rounded-lg p-3">
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-semibold text-sm">{comment.author.name}</span>
-                              <span className="text-xs text-muted-foreground">{comment.timestamp}</span>
+                              <span className="font-semibold text-sm">{comment.profiles.full_name}</span>
+                              <span className="text-xs text-muted-foreground">{getTimeAgo(comment.created_at)}</span>
                             </div>
                             <p className="text-sm">{comment.content}</p>
                           </div>

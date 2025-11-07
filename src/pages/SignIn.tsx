@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Code2, Eye, EyeOff } from "lucide-react";
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { signup, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -28,14 +30,22 @@ const SignIn = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Authentication logic will be added when Supabase is connected
-    console.log("Sign in attempt:", formData);
-    // Set authenticated state
-    login();
-    // Redirect to main page
-    navigate("/");
+    try {
+      await signup(formData.email, formData.password, formData.username, formData.username);
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account",
+      });
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Signup failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -143,7 +153,7 @@ const SignIn = () => {
 
           <div className="text-center mt-6">
             <p className="text-sm text-muted-foreground">
-              Note: Since Lovable Cloud isn't enabled yet, this is a demo signup.
+              Secure authentication powered by Lovable Cloud
             </p>
           </div>
         </div>
