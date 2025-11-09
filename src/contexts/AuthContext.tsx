@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 
 interface AuthContextType {
@@ -17,6 +17,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      console.warn('Lovable Cloud is not configured yet. Please enable it in your project settings.');
+      return;
+    }
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -35,6 +40,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (email: string, password: string) => {
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Lovable Cloud is not configured. Please enable it in your project settings.');
+    }
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -43,6 +51,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (email: string, password: string, username: string, fullName: string) => {
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Lovable Cloud is not configured. Please enable it in your project settings.');
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,6 +68,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Lovable Cloud is not configured. Please enable it in your project settings.');
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
